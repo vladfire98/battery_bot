@@ -93,28 +93,63 @@ def create_order(message):
 def create_order(message):
     if (message.from_user.id in users['users']) or (message.from_user.id in users['admins']):
         buttons_type = types.ReplyKeyboardMarkup(resize_keyboard=True)
-        for battery_type in dick['types']:
-            buttons_type.add(types.KeyboardButton(battery_type))
+        cursor.execute("select element_type from public.elements")
+        elements = cursor.fetchall()
+        print(elements)
+        for element in elements:
+            buttons_type.add(types.KeyboardButton(element[0]))
         sent = bot.send_message(message.chat.id, "Выберите тип аккумулятора:", reply_markup=buttons_type)
-        bot.register_next_step_handler(sent, define_size)
+        bot.register_next_step_handler(sent, question_size)
     else:
         bot.send_message(message.chat.id, "Permission denied!")
 
-def define_size(message):
+def question_size(message):
+    global select_type
+    select_type = message.text
+    sent = bot.send_message(message.chat.id, "Размер АКБ(мм)")
+    bot.register_next_step_handler(sent, question_voltage)
+
+def question_voltage(message):
+    global select_size
+    select_size = message.text
+    sent = bot.send_message(message.chat.id, "Напряжение(nom(V))")
+    bot.register_next_step_handler(sent, question_lenght)
+
+def question_lenght(message):
+    global select_voltage
+    select_voltage = message.text
+    sent = bot.send_message(message.chat.id, "Укажите длину выводов(мм)")
+    bot.register_next_step_handler(sent, question_name)
+
+def question_name(message):
+    global select_lenghts
+    select_lenghts = message.text
+    sent = bot.send_message(message.chat.id, "ФИО")
+    bot.register_next_step_handler(sent, question_number_phone)
+
+def question_number_phone(message):
+    global select_FIO
+    select_FIO = message.text
+    sent = bot.send_message(message.chat.id, "Укажите номер телефона (в формате 7XXXXXXXXX)")
+    bot.register_next_step_handler(sent, handle_confirmation)
+
+
+'''def define_size(message):
     global select_type
     select_type = message.text
     buttons_size = types.ReplyKeyboardMarkup(resize_keyboard=True)
     for battery_size in dick['sizes']:
         buttons_size.add(types.KeyboardButton(battery_size))
     sent = bot.send_message(message.chat.id, "Выберите размер аккумулятора:", reply_markup=buttons_size)
-    bot.register_next_step_handler(sent, handle_confirmation)
+    bot.register_next_step_handler(sent, handle_confirmation)'''
 
 def handle_confirmation(message):
-    global select_size
-    select_size = message.text
+    global select_number_phone
+    select_number_phone = message.text
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     markup.add(types.KeyboardButton('Принять'), types.KeyboardButton('Отменить'))
-    sent = bot.send_message(message.chat.id, f"Ваш заказ на аккумулятор {select_type} размером {select_size} мАч. Нажмите 'Принять' для подтверждения или 'Отменить' для отмены.", reply_markup=markup)
+    message_confirmation=f"Ваш заказ:\nТип ячеек: {select_type}\nДлина выводов: {select_lenghts}мм\nНапряжение: {select_voltage}V\nРазмер АКБ: {select_size}\nИмя клиента: {select_FIO}\nНомер телефона: {select_number_phone}\nНажмите 'Принять' для подтверждения или 'Отменить' для отмены."
+    sent = bot.send_message(message.chat.id, message_confirmation, reply_markup=markup)
     #bot.send_message(message.chat.id, f"Тип {select_type} размер {select_size}")
     bot.register_next_step_handler(sent, result_message)
 
