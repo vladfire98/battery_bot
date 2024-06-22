@@ -29,6 +29,18 @@ except:
 cursor = conn.cursor()
 
 
+@bot.message_handler(commands=['start'])
+def start(message):
+    buttons = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    btn1 = types.KeyboardButton("Создать заказ")
+    btn2 = types.KeyboardButton("Удалить заказ")
+    btn3 = types.KeyboardButton("Посмотреть активные заказы")
+    buttons.add(btn1, btn2, btn3)
+    #bot.send_message(message.chat.id, text="Привет, {0.first_name}!".format(message.from_user), reply_markup=buttons)
+    bot.send_message(message.chat.id, text="Используйте меню внизу для дальшейшего взаимодействия".format(message.from_user), reply_markup=buttons)
+
+
+#================ADMIN PANEL====================
 @bot.message_handler(commands=['admin'])
 def start_message(message):
     keyboardmain = types.InlineKeyboardMarkup()
@@ -50,10 +62,6 @@ def start_message(message):
         bot.reply_to(message, "Permission denied")
 
 
-@bot.message_handler(func=lambda message: message.text == 'list')
-def create_order(message):
-    bot.send_message(message.chat.id, f"{users}")
-
 def create_user(message):
     try:
         #global user_id
@@ -74,17 +82,13 @@ def delete_user(message):
     except ValueError:
         bot.reply_to(message, "Неверный формат ID")
 
+@bot.message_handler(func=lambda message: message.text == 'list')
+def create_order(message):
+    bot.send_message(message.chat.id, f"{users}")
 
-@bot.message_handler(commands=['start'])
-def start(message):
-    buttons = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    btn1 = types.KeyboardButton("Создать заказ")
-    btn2 = types.KeyboardButton("Удалить заказ")
-    btn3 = types.KeyboardButton("Посмотреть активные заказы")
-    buttons.add(btn1, btn2, btn3)
-    #bot.send_message(message.chat.id, text="Привет, {0.first_name}!".format(message.from_user), reply_markup=buttons)
-    bot.send_message(message.chat.id, text="Используйте меню внизу для дальшейшего взаимодействия".format(message.from_user), reply_markup=buttons)
 
+
+#================CREATE ORDER====================
 @bot.message_handler(func=lambda message: message.text == 'Создать заказ')
 def create_order(message):
     if (message.from_user.id in users['users']) or (message.from_user.id in users['admins']):
@@ -128,6 +132,7 @@ def insert_db(typ, size):
     print(f"Тип {typ} размер {size}")
 
 
+#================LIST ORDERS====================
 @bot.message_handler(func=lambda message: message.text == 'Посмотреть активные заказы')
 def list_orders(message):
     if (message.from_user.id in users['users']) or (message.from_user.id in users['admins']):
