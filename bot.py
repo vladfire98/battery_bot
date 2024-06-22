@@ -127,6 +127,23 @@ def result_message(message):
 def insert_db(typ, size):
     print(f"Тип {typ} размер {size}")
 
+
+@bot.message_handler(func=lambda message: message.text == 'Посмотреть активные заказы')
+def list_orders(message):
+    if (message.from_user.id in users['users']) or (message.from_user.id in users['admins']):
+        cursor.execute("SELECT * FROM public.orders")
+        orders = cursor.fetchall()
+        print(orders)
+        for order in orders:
+            order_id = order[0]
+            type_battery = order[1]
+            size_battery = order[2] 
+            createdate = order[3]
+            bot.send_message(message.chat.id, f"Номер заказа: {order_id}\nТип: {type_battery}\nРазмер: {size_battery}\nДата создания: {createdate}")
+        conn.commit()
+    else:
+        bot.send_message(message.chat.id, "Permission denied!")
+
 @bot.message_handler(content_types=['contact'])
 def get_contact(message):
     try:
